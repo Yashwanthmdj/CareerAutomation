@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as SiteRouteImport } from './routes/_site'
@@ -20,6 +21,7 @@ import { Route as AppResumeRouteImport } from './routes/app.resume'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppOpportunitiesRouteImport } from './routes/app.opportunities'
 import { Route as AppNotificationsRouteImport } from './routes/app.notifications'
+import { Route as AppIntegrationsRouteImport } from './routes/app.integrations'
 import { Route as AppAutomationRouteImport } from './routes/app.automation'
 import { Route as AppApplicationsRouteImport } from './routes/app.applications'
 import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
@@ -32,6 +34,11 @@ import { Route as SiteFeaturesRouteImport } from './routes/_site.features'
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -83,6 +90,11 @@ const AppNotificationsRoute = AppNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => AppRoute,
 } as any)
+const AppIntegrationsRoute = AppIntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAutomationRoute = AppAutomationRouteImport.update({
   id: '/automation',
   path: '/automation',
@@ -128,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/signup': typeof SignupRoute
   '/features': typeof SiteFeaturesRoute
   '/help': typeof SiteHelpRoute
@@ -137,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/applications': typeof AppApplicationsRoute
   '/app/automation': typeof AppAutomationRoute
+  '/app/integrations': typeof AppIntegrationsRoute
   '/app/notifications': typeof AppNotificationsRoute
   '/app/opportunities': typeof AppOpportunitiesRoute
   '/app/profile': typeof AppProfileRoute
@@ -147,6 +161,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/signup': typeof SignupRoute
   '/features': typeof SiteFeaturesRoute
   '/help': typeof SiteHelpRoute
@@ -156,6 +171,7 @@ export interface FileRoutesByTo {
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/applications': typeof AppApplicationsRoute
   '/app/automation': typeof AppAutomationRoute
+  '/app/integrations': typeof AppIntegrationsRoute
   '/app/notifications': typeof AppNotificationsRoute
   '/app/opportunities': typeof AppOpportunitiesRoute
   '/app/profile': typeof AppProfileRoute
@@ -169,6 +185,7 @@ export interface FileRoutesById {
   '/_site': typeof SiteRouteWithChildren
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/signup': typeof SignupRoute
   '/_site/features': typeof SiteFeaturesRoute
   '/_site/help': typeof SiteHelpRoute
@@ -178,6 +195,7 @@ export interface FileRoutesById {
   '/app/analytics': typeof AppAnalyticsRoute
   '/app/applications': typeof AppApplicationsRoute
   '/app/automation': typeof AppAutomationRoute
+  '/app/integrations': typeof AppIntegrationsRoute
   '/app/notifications': typeof AppNotificationsRoute
   '/app/opportunities': typeof AppOpportunitiesRoute
   '/app/profile': typeof AppProfileRoute
@@ -191,6 +209,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/login'
+    | '/onboarding'
     | '/signup'
     | '/features'
     | '/help'
@@ -200,6 +219,7 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/applications'
     | '/app/automation'
+    | '/app/integrations'
     | '/app/notifications'
     | '/app/opportunities'
     | '/app/profile'
@@ -210,6 +230,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/onboarding'
     | '/signup'
     | '/features'
     | '/help'
@@ -219,6 +240,7 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/applications'
     | '/app/automation'
+    | '/app/integrations'
     | '/app/notifications'
     | '/app/opportunities'
     | '/app/profile'
@@ -231,6 +253,7 @@ export interface FileRouteTypes {
     | '/_site'
     | '/app'
     | '/login'
+    | '/onboarding'
     | '/signup'
     | '/_site/features'
     | '/_site/help'
@@ -240,6 +263,7 @@ export interface FileRouteTypes {
     | '/app/analytics'
     | '/app/applications'
     | '/app/automation'
+    | '/app/integrations'
     | '/app/notifications'
     | '/app/opportunities'
     | '/app/profile'
@@ -253,6 +277,7 @@ export interface RootRouteChildren {
   SiteRoute: typeof SiteRouteWithChildren
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
+  OnboardingRoute: typeof OnboardingRoute
   SignupRoute: typeof SignupRoute
 }
 
@@ -263,6 +288,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -333,6 +365,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/app/notifications'
       preLoaderRoute: typeof AppNotificationsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/integrations': {
+      id: '/app/integrations'
+      path: '/integrations'
+      fullPath: '/app/integrations'
+      preLoaderRoute: typeof AppIntegrationsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/automation': {
@@ -416,6 +455,7 @@ interface AppRouteChildren {
   AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppApplicationsRoute: typeof AppApplicationsRoute
   AppAutomationRoute: typeof AppAutomationRoute
+  AppIntegrationsRoute: typeof AppIntegrationsRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppOpportunitiesRoute: typeof AppOpportunitiesRoute
   AppProfileRoute: typeof AppProfileRoute
@@ -428,6 +468,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAnalyticsRoute: AppAnalyticsRoute,
   AppApplicationsRoute: AppApplicationsRoute,
   AppAutomationRoute: AppAutomationRoute,
+  AppIntegrationsRoute: AppIntegrationsRoute,
   AppNotificationsRoute: AppNotificationsRoute,
   AppOpportunitiesRoute: AppOpportunitiesRoute,
   AppProfileRoute: AppProfileRoute,
@@ -443,6 +484,7 @@ const rootRouteChildren: RootRouteChildren = {
   SiteRoute: SiteRouteWithChildren,
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
+  OnboardingRoute: OnboardingRoute,
   SignupRoute: SignupRoute,
 }
 export const routeTree = rootRouteImport

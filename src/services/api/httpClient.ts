@@ -66,10 +66,7 @@ export class ApiClient {
     const payload = isJson ? await res.json().catch(() => null) : await res.text().catch(() => "");
 
     if (!res.ok) {
-      const message =
-        typeof payload === "object" && payload && "message" in (payload as any)
-          ? String((payload as any).message)
-          : res.statusText || "Request failed";
+      const message = extractErrorMessage(payload, res.statusText);
       const err: ApiError = { status: res.status, message, details: payload };
       throw new ApiRequestError(err);
     }
@@ -84,5 +81,71 @@ export class ApiClient {
   post<T>(path: string, body?: unknown) {
     return this.request<T>(path, { method: "POST", body });
   }
+
+  patch<T>(path: string, body?: unknown) {
+    return this.request<T>(path, { method: "PATCH", body });
+  }
+
+  delete<T>(path: string) {
+    return this.request<T>(path, { method: "DELETE" });
+  }
+
+  async upload<T>(path: string, formData: FormData, signal?: AbortSignal): Promise<T> {
+    const url = new URL(path, this.opts.baseUrl);
+    const headers: Record<string, string> = {};
+    const token = this.opts.getAccessToken?.();
+    if (token) headers.authorization = `Bearer ${token}`;
+
+    const res = await fetch(url.toString(), {
+      method: "POST",
+      headers,
+      body: formData,
+      signal,
+    });
+
+    const contentType = res.headers.get("content-type") ?? "";
+    const isJson = contentType.includes("application/json");
+    const payload = isJson ? await res.json().catch(() => null) : await res.text().catch(() => "");
+
+    if (!res.ok) {
+      const message = extractErrorMessage(payload, res.statusText);
+      throw new ApiRequestError({ status: res.status, message, details: payload });
+    }
+
+    return payload as T;
+  }
+
+  async downloadBlob(path: string, signal?: AbortSignal): Promise<Blob> {
+    const url = new URL(path, this.opts.baseUrl);
+    const headers: Record<string, string> = {};
+    const token = this.opts.getAccessToken?.();
+    if (token) headers.authorization = `Bearer ${token}`;
+
+    const res = await fetch(url.toString(), { method: "GET", headers, signal });
+    if (!res.ok) {
+      const contentType = res.headers.get("content-type") ?? "";
+      const isJson = contentType.includes("application/json");
+      const payload = isJson ? await res.json().catch(() => null) : await res.text().catch(() => "");
+      const message = extractErrorMessage(payload, res.statusText);
+      throw new ApiRequestError({ status: res.status, message, details: payload });
+    }
+    return res.blob();
+  }
+}
+
+function extractErrorMessage(payload: unknown, fallback: string): string {
+  if (typeof payload === "object" && payload !== null) {
+    if ("detail" in payload) {
+      const detail = (payload as { detail: unknown }).detail;
+      if (typeof detail === "string") return detail;
+      if (Array.isArray(detail)) {
+        return detail
+          .map((item) => (typeof item === "object" && item && "msg" in item ? String(item.msg) : String(item)))
+          .join(", ");
+      }
+    }
+    if ("message" in payload) return String((payload as { message: unknown }).message);
+  }
+  return fallback || "Request failed";
 }
 

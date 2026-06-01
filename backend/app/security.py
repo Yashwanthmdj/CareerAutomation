@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -20,7 +22,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def create_access_token(subject: str) -> str:
     expires_delta = timedelta(minutes=settings.jwt_access_token_expires_minutes)
     expire = datetime.now(timezone.utc) + expires_delta
-    payload: dict[str, Any] = {"sub": subject, "exp": expire}
+    payload: Dict[str, Any] = {"sub": subject, "exp": expire}
     return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
 

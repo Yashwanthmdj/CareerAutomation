@@ -1,0 +1,61 @@
+Maddoju Yashwanth
+AI/ML Engineer / AI Full Stack Engineer
++91-9398884972
+yashwanthmdj@gmail.com
+https://www.linkedin.com/in/yashmdj/
+https://github.com/Yashwanthmdj
+Summary
+Iam a Software Engineer & AI Engineer with 2+ years of experience building scalable full-stack applications and AI-powered
+automation systems. Delivered 30+ real-world projects using React.js , Python, MongoDB. Skilled in Generative AI,
+LLMs (GPT-4), LangChain, Prompt Engineering, APIs, and System Design, improving operational efficiency by 40%
+through intelligent automation.
+Technical Skills
+Languages: Python, JavaScript, C++, C, SQL
+Frameworks: React.js, HTML, CSS3, Tailwind CSS, Node.js , MongoDB
+AI/ML: Generative AI, GPT-4, LangChain, Prompt Engineering, OpenCV
+Core: Data Structures, OOP, DBMS, Operating Systems , API Integration, Automation
+Soft Skills: Leadership , Problem-Solving , Team Player , Communication , Project Management , Adaptability
+Experience
+Freelance AI Software Developer
+Nov 2022 – Present
+• Delivered 30+ full-stack and AI-driven applications, improving automation and system efficiency.
+• Built scalable applications using React.js, Node.js, MongoDB, and deployed REST APIs.
+• Developed AI-powered automation systems using GPT-4 and Python, reducing manual effort by 40%.
+• Designed end-to-end architectures including frontend, backend, APIs, and cloud deployment.
+Projects
+Built GPT-4 powered lead qualification workflow reducing manual screening time by 60percent for outbound
+sales operations.
+2026
+https://github.com/Yashwanthmdj/AI-Agent-for-LeadQualification
+• Built an AI-driven lead qualification system using LangChain and GPT-4.
+• Automated lead engagement and scoring via CRM and messaging integrations.
+• Reduced response time by 60% and improved qualified lead conversion.
+AI Smart Assistant for Accessibility (ENZO)
+2025
+https://github.com/Yashwanthmdj/enzo-chatbot
+• Developed a voice-enabled AI assistant for hands-free system control.
+• Implemented real-time execution workflows improving user productivity.
+AI-Based Agriculture/Farmers Platform With Multi Support Languages
+2025
+https://github.com/Yashwanthmdj/Farm.co
+• Built a full-stack AI agriculture platform for crop insights and predictions.
+• Integrated APIs for real-time weather and data-driven decision support.
+Awards & Certifications
+• 1st Place – National AI Autonomous Hackathon
+• 1st Place – CBIT Hackathon
+• Student Board Achievement(3×)
+• Salesforce AgentForce Specialist
+https://drive.google.com/...
+• AWS Solutions Architecture Job Simulation
+https://www.theforage.com/...
+• AI Engineer Certification
+https://www.oneroadmap.io/...
+Education
+B.Tech – Computer Science and Engineering
+2023 – Present
+CMR Technical Campus, Hyderabad
+CGPA: 8.75
+Intermediate – MPC
+2021 – 2023
+Sri Chaitanya Jr Kalasala, Hyderabad
+Percentage: 90.07

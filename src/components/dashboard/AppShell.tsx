@@ -13,10 +13,13 @@ import {
   Search,
   ChevronDown,
   LogOut,
+  Plug,
+  User,
 } from "lucide-react";
 import { useState } from "react";
 import BackgroundFX from "@/components/shared/BackgroundFX";
 import { useAuth } from "@/hooks/useAuth";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 const nav = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -26,12 +29,15 @@ const nav = [
   { to: "/app/resume", label: "Resume Manager", icon: FileText },
   { to: "/app/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/app/notifications", label: "Notifications", icon: Bell },
+  { to: "/app/integrations", label: "Integrations", icon: Plug },
   { to: "/app/settings", label: "Settings", icon: Settings },
+  { to: "/app/profile", label: "Profile", icon: User },
 ];
 
 export default function AppShell({ children, title }: { children: React.ReactNode; title: string }) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { metrics } = useWorkspace();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const normalizedPath = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
   const [collapsed, setCollapsed] = useState(false);
@@ -150,12 +156,27 @@ export default function AppShell({ children, title }: { children: React.ReactNod
             </div>
             <div className="ml-auto flex items-center gap-2">
               <div className="glass hidden items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] text-white/70 sm:flex">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                AI · Active
+                <span
+                  className={`h-1.5 w-1.5 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.8)] ${
+                    metrics.automationReadiness >= 75
+                      ? "animate-pulse bg-emerald-400"
+                      : metrics.automationReadiness >= 40
+                        ? "bg-amber-400"
+                        : "bg-white/30"
+                  }`}
+                />
+                {metrics.automationReadiness >= 75
+                  ? "AI · Ready"
+                  : metrics.automationReadiness >= 40
+                    ? "AI · Configuring"
+                    : "AI · Standby"}
               </div>
-              <button className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-white/70 hover:bg-white/[0.08]">
+              <Link
+                to="/app/notifications"
+                className="grid h-9 w-9 place-items-center rounded-full bg-white/[0.04] text-white/70 hover:bg-white/[0.08]"
+              >
                 <Bell className="h-4 w-4" />
-              </button>
+              </Link>
               <Link
                 to="/app/profile"
                 className="flex items-center gap-2 rounded-full bg-white/[0.04] p-1 pr-2.5 hover:bg-white/[0.08]"
@@ -187,12 +208,14 @@ export function StatCard({
   label,
   value,
   delta,
+  hint,
   icon: Icon,
   accent = "indigo",
 }: {
   label: string;
   value: string;
   delta?: string;
+  hint?: string;
   icon: any;
   accent?: "indigo" | "cyan" | "violet" | "emerald";
 }) {
@@ -212,9 +235,10 @@ export function StatCard({
         <span className="text-[11px] uppercase tracking-[0.16em] text-white/50">{label}</span>
         <Icon className={`h-4 w-4 ${accents[accent].split(" ").pop()}`} />
       </div>
-      <div className="mt-4 flex items-end justify-between">
+      <div className="mt-4 flex items-end justify-between gap-2">
         <div className="font-display text-3xl font-semibold text-white">{value}</div>
         {delta && <div className="text-[11px] font-medium text-emerald-300">{delta}</div>}
+        {hint && !delta && <div className="text-[11px] text-white/45">{hint}</div>}
       </div>
     </motion.div>
   );

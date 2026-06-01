@@ -58,7 +58,7 @@ function IntegrationsPage() {
                 </div>
                 <div>
                   <div className="font-display text-[15px] font-semibold text-white">{it.name}</div>
-                  <div className="text-[11px] uppercase tracking-[0.16em] text-emerald-300/70">Connected</div>
+                  <div className="text-[11px] uppercase tracking-[0.16em] text-white/40">Available</div>
                 </div>
               </div>
               <p className="mt-4 text-[13px] leading-relaxed text-white/55">{it.desc}</p>

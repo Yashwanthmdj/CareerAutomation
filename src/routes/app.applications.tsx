@@ -1,47 +1,85 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "motion/react";
+import { Inbox } from "lucide-react";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { EmptyState } from "@/components/dashboard/EmptyState";
+import type { ApplicationStage } from "@/types/workspace";
 
 export const Route = createFileRoute("/app/applications")({
   head: () => ({ meta: [{ title: "Applications — Nexus" }] }),
   component: Applications,
 });
 
-const columns = [
-  { name: "Saved", items: [["Discord","Staff Eng"],["Figma","Sr Designer"]] },
-  { name: "Applied", items: [["Stripe","Senior PM"],["Vercel","DX Eng"],["Notion","AI Lead"]] },
-  { name: "Interview", items: [["Anthropic","Research Eng"],["Linear","Founding Designer"]] },
-  { name: "Offer", items: [["OpenAI","Forward Deployed"]] },
-  { name: "Rejected", items: [["Google","L5 PM"]] },
+const COLUMNS: { name: string; stage: ApplicationStage }[] = [
+  { name: "Saved", stage: "saved" },
+  { name: "Applied", stage: "applied" },
+  { name: "Interview", stage: "interview" },
+  { name: "Offer", stage: "offer" },
 ];
 
 function Applications() {
+  const { workspace } = useWorkspace();
+  const hasAny = workspace.applications.length > 0;
+
+  if (!hasAny) {
+    return (
+      <>
+        <div className="flex gap-4 overflow-x-auto pb-2">
+          {COLUMNS.map((col) => (
+            <div key={col.stage} className="w-72 flex-none">
+              <div className="flex items-center justify-between px-1">
+                <div className="text-[11px] uppercase tracking-[0.16em] text-white/60">{col.name}</div>
+                <div className="text-[11px] text-white/40">0</div>
+              </div>
+              <div className="mt-3">
+                <div className="glass rounded-xl border border-dashed border-white/10 p-6 text-center">
+                  <p className="text-[12px] text-white/40">No {col.name.toLowerCase()} applications</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-8">
+          <EmptyState
+            icon={Inbox}
+            title="Your application tracker is empty"
+            description="Applications will appear here when you save or apply to opportunities. Kanban columns stay ready for your pipeline."
+            actionLabel="Browse opportunities"
+            actionTo="/app/opportunities"
+          />
+        </div>
+      </>
+    );
+  }
+
   return (
-    <>
-      <div className="flex gap-4 overflow-x-auto pb-2">
-        {columns.map((col) => (
-          <div key={col.name} className="w-72 flex-none">
+    <div className="flex gap-4 overflow-x-auto pb-2">
+      {COLUMNS.map((col) => {
+        const items = workspace.applications.filter((a) => a.stage === col.stage);
+        return (
+          <div key={col.stage} className="w-72 flex-none">
             <div className="flex items-center justify-between px-1">
               <div className="text-[11px] uppercase tracking-[0.16em] text-white/60">{col.name}</div>
-              <div className="text-[11px] text-white/40">{col.items.length}</div>
+              <div className="text-[11px] text-white/40">{items.length}</div>
             </div>
             <div className="mt-3 space-y-2">
-              {col.items.map(([c, r], i) => (
-                <motion.div key={i} whileHover={{ y: -3 }} className="glass cursor-grab rounded-xl p-3.5 active:cursor-grabbing">
-                  <div className="text-[13.5px] font-medium text-white">{r}</div>
-                  <div className="mt-0.5 text-[12px] text-white/50">{c}</div>
-                  <div className="mt-3 flex items-center justify-between">
-                    <div className="flex -space-x-1.5">
-                      {[0,1,2].map(k => <div key={k} className="h-5 w-5 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 ring-2 ring-[#050816]" />)}
-                    </div>
-                    <div className="text-[10.5px] uppercase tracking-[0.12em] text-white/40">2d ago</div>
-                  </div>
+              {items.map((app) => (
+                <motion.div
+                  key={app.id}
+                  whileHover={{ y: -3 }}
+                  className="glass cursor-grab rounded-xl p-3.5 active:cursor-grabbing"
+                >
+                  <div className="text-[13.5px] font-medium text-white">{app.role}</div>
+                  <div className="mt-0.5 text-[12px] text-white/50">{app.company}</div>
                 </motion.div>
               ))}
-              <button className="w-full rounded-xl border border-dashed border-white/10 py-2 text-[12px] text-white/40 hover:border-white/20 hover:text-white/70">+ Add card</button>
+              <div className="w-full rounded-xl border border-dashed border-white/10 py-2 text-center text-[12px] text-white/30">
+                Drop applications here
+              </div>
             </div>
           </div>
-        ))}
-      </div>
-    </>
+        );
+      })}
+    </div>
   );
 }

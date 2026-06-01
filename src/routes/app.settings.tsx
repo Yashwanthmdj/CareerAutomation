@@ -1,7 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion } from "motion/react";
-import { Settings as SettingsIcon, KeyRound, CreditCard, Plug, Shield, Bell as BellIcon } from "lucide-react";
+import {
+  Settings as SettingsIcon,
+  Shield,
+  Bell as BellIcon,
+  Plug,
+  User,
+} from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 export const Route = createFileRoute("/app/settings")({
   head: () => ({ meta: [{ title: "Settings — Nexus" }] }),
@@ -9,16 +17,17 @@ export const Route = createFileRoute("/app/settings")({
 });
 
 const tabs = [
-  { id: "general", label: "General", icon: SettingsIcon },
-  { id: "automation", label: "Automation rules", icon: Plug },
-  { id: "billing", label: "Billing", icon: CreditCard },
+  { id: "account", label: "Account", icon: User },
   { id: "security", label: "Security", icon: Shield },
-  { id: "api", label: "API keys", icon: KeyRound },
-  { id: "notifs", label: "Notifications", icon: BellIcon },
+  { id: "notifications", label: "Notifications", icon: BellIcon },
+  { id: "integrations", label: "Integrations", icon: Plug },
+  { id: "preferences", label: "Preferences", icon: SettingsIcon },
 ];
 
 function Settings() {
-  const [active, setActive] = useState("general");
+  const [active, setActive] = useState("account");
+  const { user } = useAuth();
+  const { workspace, metrics, careerProfile } = useWorkspace();
 
   return (
     <>
@@ -29,10 +38,16 @@ function Settings() {
             return (
               <button
                 key={t.id}
+                type="button"
                 onClick={() => setActive(t.id)}
                 className={`relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] transition-colors ${on ? "text-white" : "text-white/55 hover:text-white"}`}
               >
-                {on && <motion.span layoutId="setTab" className="absolute inset-0 rounded-xl bg-white/[0.06] ring-1 ring-inset ring-white/10" />}
+                {on && (
+                  <motion.span
+                    layoutId="setTab"
+                    className="absolute inset-0 rounded-xl bg-white/[0.06] ring-1 ring-inset ring-white/10"
+                  />
+                )}
                 <t.icon className="relative h-4 w-4" />
                 <span className="relative">{t.label}</span>
               </button>
@@ -41,53 +56,82 @@ function Settings() {
         </div>
 
         <div className="space-y-4">
-          <Section title="Workspace">
-            <Field label="Workspace name" value="Nexus · Personal" />
-            <Field label="Primary email" value="alex@nexus.ai" />
-            <Field label="Time zone" value="America/Los_Angeles" />
-          </Section>
+          {active === "account" && (
+            <Section title="Account">
+              <Field label="Full name" value={user?.name ?? "—"} />
+              <Field label="Email" value={user?.email ?? "—"} />
+              <Field label="Plan" value={`${user?.plan ?? "free"} plan`} />
+              <Link
+                to="/app/profile"
+                className="inline-flex text-[12px] text-cyan-300 hover:text-cyan-200"
+              >
+                Edit full profile →
+              </Link>
+            </Section>
+          )}
 
-          <Section title="Automation rules">
-            <div className="space-y-3">
-              {[
-                ["Auto-apply when match ≥ 90%", true],
-                ["Skip companies on blocklist", true],
-                ["Pause overnight (10pm–7am PT)", false],
-                ["Require approval for FAANG roles", true],
-              ].map(([l, on]) => (
-                <div key={l as string} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">
-                  <span className="text-[13px] text-white/85">{l}</span>
-                  <div className={`relative h-5 w-9 rounded-full ${on ? "bg-cyan-400/80" : "bg-white/10"}`}>
-                    <div className={`absolute top-0.5 h-4 w-4 rounded-full bg-white ${on ? "translate-x-[18px]" : "translate-x-0.5"}`} />
-                  </div>
-                </div>
+          {active === "security" && (
+            <Section title="Security">
+              <Field label="Authentication" value="JWT session (active)" />
+              <Field label="Password" value="Managed via login credentials" />
+              <p className="text-[12px] text-white/50">
+                Password change and two-factor authentication will be available in a future release.
+              </p>
+            </Section>
+          )}
+
+          {active === "notifications" && (
+            <Section title="Notifications">
+              <p className="text-[13px] text-white/55">
+                Configure delivery preferences on the{" "}
+                <Link to="/app/notifications" className="text-cyan-300 hover:text-cyan-200">
+                  notifications page
+                </Link>
+                .
+              </p>
+              {Object.entries(workspace.notificationPrefs).map(([key, on]) => (
+                <Field key={key} label={key} value={on ? "Enabled" : "Disabled"} />
               ))}
-            </div>
-          </Section>
+            </Section>
+          )}
 
-          <Section title="API keys">
-            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-[13px] font-medium text-white">Production key</div>
-                  <div className="mt-1 font-mono text-[12px] text-white/55">nxs_live_••••••••••••••5f2a</div>
-                </div>
-                <button className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[12px] text-white">Rotate</button>
-              </div>
-            </div>
-          </Section>
+          {active === "integrations" && (
+            <Section title="Integrations">
+              <Field
+                label="Connected platforms"
+                value={`${metrics.connectedPlatforms} / ${metrics.totalPlatforms}`}
+              />
+              <Link
+                to="/app/integrations"
+                className="inline-flex text-[12px] text-cyan-300 hover:text-cyan-200"
+              >
+                Manage integrations →
+              </Link>
+            </Section>
+          )}
 
-          <Section title="Danger zone">
-            <div className="rounded-xl border border-rose-400/20 bg-rose-500/[0.04] p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-[13px] font-medium text-white">Delete workspace</div>
-                  <div className="mt-1 text-[12px] text-white/55">This permanently removes all data and automations.</div>
-                </div>
-                <button className="rounded-lg border border-rose-400/30 bg-rose-500/10 px-3 py-1.5 text-[12px] text-rose-200">Delete</button>
-              </div>
-            </div>
-          </Section>
+          {active === "preferences" && (
+            <Section title="Preferences">
+              <Field
+                label="Employment type"
+                value={careerProfile?.employmentType?.replace("_", " ") ?? "Not set"}
+              />
+              <Field
+                label="Preferred roles"
+                value={careerProfile?.preferredRoles.join(", ") || "Not set"}
+              />
+              <Field
+                label="Preferred locations"
+                value={careerProfile?.preferredLocations.join(", ") || "Not set"}
+              />
+              <Link
+                to="/app/profile"
+                className="inline-flex text-[12px] text-cyan-300 hover:text-cyan-200"
+              >
+                Update career preferences →
+              </Link>
+            </Section>
+          )}
         </div>
       </div>
     </>
