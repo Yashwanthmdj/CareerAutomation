@@ -49,6 +49,19 @@ def test_benchmark_resume_extraction_counts():
 
 
 @pytest.mark.skipif(not FIXTURE_PDF.exists(), reason="benchmark_resume.pdf fixture missing")
+def test_benchmark_parser_diagnostics():
+    pdf_bytes = FIXTURE_PDF.read_bytes()
+    parsed = parse_resume(pdf_bytes)
+    d = parsed.diagnostics
+
+    assert d.raw_text_length > 500
+    assert "skills" in d.detected_sections
+    assert d.extraction_counts["skills"] >= 20
+    assert 0.0 < d.parser_confidence <= 1.0
+    assert "skills" in d.confidence_breakdown
+
+
+@pytest.mark.skipif(not FIXTURE_PDF.exists(), reason="benchmark_resume.pdf fixture missing")
 def test_benchmark_sections_detected():
     pdf_bytes = FIXTURE_PDF.read_bytes()
     parsed = parse_resume(pdf_bytes)

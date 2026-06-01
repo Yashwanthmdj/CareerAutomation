@@ -53,7 +53,10 @@ This README is updated as features ship. It walks through **every step** to clon
 | **Phase 2.1** | Done | Career Identity System — onboarding wizard, PostgreSQL tables (`user_profiles`, `career_preferences`, `user_skills`, `onboarding_status`), career API |
 | **Phase 3.1** | Done | Resume Infrastructure — `resumes` table, Supabase Storage bucket `resumes`, upload/list/activate/delete APIs, Resume Manager UI |
 | **Phase 3.2** | Done | Resume Intelligence Foundation — PDF text extraction (PyMuPDF/pdfplumber), rule-based parsing, structured PostgreSQL storage, analysis API + UI |
-| **Phase 3.3+** | Planned | ATS scoring, AI optimization (not started) |
+| **Phase 3.3** | Done | ATS Intelligence Engine — rule-based ATS score, breakdown, missing skills, strengths/weaknesses, recommendations (no AI APIs) |
+| **Phase 3.3.1** | Done | ATS skill intelligence — normalization, aliases, role-track recommendations |
+| **Phase 3.3.2** | Done | `POST /resumes/{id}/analyze` — re-parse stored PDFs (backfill); Re-analyze button in Resume Manager |
+| **Phase 3.4+** | Planned | AI resume optimization (not started) |
 | **Phase 2.2+** | Planned | Platform integrations (WhatsApp, LinkedIn, Gmail), AI agents, opportunity discovery |
 
 > **Data rule:** Career identity and resume metadata live in **PostgreSQL**. Resume files live in **Supabase Storage** (private bucket). `localStorage` is only used for UI state (e.g. integration toggles, activity feed) — not as the source of truth for profile or resumes.
@@ -1048,10 +1051,13 @@ pip install -r requirements.txt
 
 ## Roadmap / Next Steps
 
-**Phase 3.3+ (not built yet):**
+**Phase 3.3 (done):** Rule-based ATS scoring via `GET /resumes/{id}/ats` and `GET /resumes/active/ats`.
 
-1. ATS scoring and resume optimization
-2. AI rewrite / recommendations (OpenAI, Gemini, Claude — not wired)
+**Phase 3.3.2 (done):** Re-analyze via `POST /resumes/{id}/analyze` — downloads PDF from Supabase and re-runs the parser.
+
+**Phase 3.4+ (not built yet):**
+
+1. AI rewrite / recommendations (OpenAI, Gemini, Claude — not wired)
 
 **Phase 2.2+ (not built yet):**
 

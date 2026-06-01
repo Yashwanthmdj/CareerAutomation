@@ -19,9 +19,11 @@ type ResumeState = {
   isLoading: boolean;
   isRefreshing: boolean;
   isUploading: boolean;
+  isAnalyzing: boolean;
   error: string | null;
   refresh: () => Promise<void>;
   upload: (file: File, title?: string) => Promise<Resume>;
+  analyze: (id: string) => Promise<void>;
   activate: (id: string) => Promise<void>;
   remove: (id: string) => Promise<void>;
   download: (id: string, fileName: string) => Promise<void>;
@@ -41,6 +43,7 @@ export function ResumeProvider({ user, children }: { user: User | null; children
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
@@ -87,6 +90,24 @@ export function ResumeProvider({ user, children }: { user: User | null; children
         throw err;
       } finally {
         setIsUploading(false);
+      }
+    },
+    [refresh],
+  );
+
+  const analyze = useCallback(
+    async (id: string) => {
+      setIsAnalyzing(true);
+      setError(null);
+      try {
+        await resumeService.analyze(id);
+        await refresh();
+      } catch (err) {
+        const message = err instanceof ApiRequestError ? err.message : "Failed to analyze resume";
+        setError(message);
+        throw err;
+      } finally {
+        setIsAnalyzing(false);
       }
     },
     [refresh],
@@ -144,9 +165,11 @@ export function ResumeProvider({ user, children }: { user: User | null; children
       isLoading,
       isRefreshing,
       isUploading,
+      isAnalyzing,
       error,
       refresh,
       upload,
+      analyze,
       activate,
       remove,
       download,
@@ -158,9 +181,11 @@ export function ResumeProvider({ user, children }: { user: User | null; children
       isLoading,
       isRefreshing,
       isUploading,
+      isAnalyzing,
       error,
       refresh,
       upload,
+      analyze,
       activate,
       remove,
       download,

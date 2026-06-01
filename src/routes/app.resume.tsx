@@ -10,7 +10,10 @@ import {
   AlertCircle,
   Sparkles,
   BarChart3,
+  Target,
+  RefreshCw,
 } from "lucide-react";
+import { AtsIntelligencePanel } from "@/components/resume/AtsIntelligencePanel";
 import { useRef, useState } from "react";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { AnalysisSummaryCards } from "@/components/resume/AnalysisSummaryCards";
@@ -31,8 +34,10 @@ function ResumeManager() {
     activeResume,
     isLoading,
     isUploading,
+    isAnalyzing,
     error,
     upload,
+    analyze,
     activate,
     remove,
     download,
@@ -184,6 +189,19 @@ function ResumeManager() {
         </div>
       )}
 
+      {activeResume && (
+        <div className="glass rounded-2xl p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <Target className="h-4 w-4 text-violet-300" />
+            <span className="font-display text-[15px] font-semibold text-white">ATS Intelligence Engine</span>
+            <span className="rounded-full bg-violet-400/10 px-2 py-0.5 text-[10px] text-violet-200 ring-1 ring-violet-400/20">
+              Rule-based
+            </span>
+          </div>
+          <AtsIntelligencePanel resumeId={activeResume.id} />
+        </div>
+      )}
+
       {!hasResumes ? (
         <EmptyState
           icon={FileText}
@@ -233,6 +251,19 @@ function ResumeManager() {
                   />
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {(resume.analysisStatus === "pending" ||
+                    resume.analysisStatus === "failed" ||
+                    !resume.analysisSummary?.skillsCount) && (
+                    <ActionButton
+                      label={isAnalyzing ? "Analyzing…" : "Re-analyze"}
+                      icon={RefreshCw}
+                      disabled={pendingId === resume.id || isAnalyzing}
+                      onClick={() => {
+                        setPendingId(resume.id);
+                        void analyze(resume.id).finally(() => setPendingId(null));
+                      }}
+                    />
+                  )}
                   <ActionButton
                     label="View Analysis"
                     icon={BarChart3}

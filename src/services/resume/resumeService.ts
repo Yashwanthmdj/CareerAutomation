@@ -1,6 +1,12 @@
 import { apiClient } from "@/services/api/client";
 import type { Resume, ResumeSummary } from "@/types/resume";
 import type { ResumeAnalysis } from "@/types/resumeAnalysis";
+import type {
+  AtsIntelligence,
+  FamilyMatchItem,
+  ScoreBreakdownItem,
+  SkillNormalizationItem,
+} from "@/types/ats";
 
 type AnalysisSummaryApi = {
   skills_count: number;
@@ -24,6 +30,34 @@ type ResumeApi = {
   updated_at: string;
   analysis_status?: string | null;
   analysis_summary?: AnalysisSummaryApi | null;
+};
+
+type AtsIntelligenceApi = {
+  ats_score: number;
+  grade: string;
+  score_breakdown: {
+    category: string;
+    label: string;
+    score: number;
+    weight: number;
+    detail: string;
+  }[];
+  missing_skills: string[];
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+  target_role: string;
+  detected_role: string;
+  role_detection_source: string;
+  matched_skills: string[];
+  direct_matches: string[];
+  family_matches: { target_skill: string; resume_skill: string; family: string }[];
+  target_skill_set: string[];
+  resume_skills_normalized: { raw: string; normalized: string }[];
+  target_skills_normalized: { raw: string; normalized: string }[];
+  resume_skill_count: number;
+  target_skill_count: number;
+  analysis_ready: boolean;
 };
 
 type ResumeAnalysisApi = {
@@ -81,6 +115,48 @@ function mapResume(data: ResumeApi): Resume {
     updatedAt: data.updated_at,
     analysisStatus: (data.analysis_status as Resume["analysisStatus"]) ?? null,
     analysisSummary: data.analysis_summary ? mapSummary(data.analysis_summary) : null,
+  };
+}
+
+function mapAts(data: AtsIntelligenceApi): AtsIntelligence {
+  return {
+    atsScore: data.ats_score,
+    grade: data.grade,
+    scoreBreakdown: data.score_breakdown.map(
+      (b): ScoreBreakdownItem => ({
+        category: b.category,
+        label: b.label,
+        score: b.score,
+        weight: b.weight,
+        detail: b.detail,
+      }),
+    ),
+    missingSkills: data.missing_skills,
+    strengths: data.strengths,
+    weaknesses: data.weaknesses,
+    recommendations: data.recommendations,
+    targetRole: data.target_role,
+    detectedRole: data.detected_role || data.target_role,
+    roleDetectionSource: data.role_detection_source,
+    matchedSkills: data.matched_skills ?? [],
+    directMatches: data.direct_matches ?? [],
+    familyMatches: (data.family_matches ?? []).map(
+      (item): FamilyMatchItem => ({
+        targetSkill: item.target_skill,
+        resumeSkill: item.resume_skill,
+        family: item.family,
+      }),
+    ),
+    targetSkillSet: data.target_skill_set ?? [],
+    resumeSkillsNormalized: (data.resume_skills_normalized ?? []).map(
+      (item): SkillNormalizationItem => ({ raw: item.raw, normalized: item.normalized }),
+    ),
+    targetSkillsNormalized: (data.target_skills_normalized ?? []).map(
+      (item): SkillNormalizationItem => ({ raw: item.raw, normalized: item.normalized }),
+    ),
+    resumeSkillCount: data.resume_skill_count,
+    targetSkillCount: data.target_skill_count,
+    analysisReady: data.analysis_ready,
   };
 }
 
@@ -159,6 +235,28 @@ export const resumeService = {
   async getAnalysis(id: string): Promise<ResumeAnalysis> {
     const data = await apiClient.get<ResumeAnalysisApi>(`/resumes/${id}/analysis`);
     return mapAnalysis(data);
+  },
+
+  async analyze(id: string): Promise<{ analysisStatus: string; summary: Resume["analysisSummary"] }> {
+    const data = await apiClient.post<{
+      analysis_status: string;
+      summary: AnalysisSummaryApi;
+      message: string;
+    }>(`/resumes/${id}/analyze`);
+    return {
+      analysisStatus: data.analysis_status,
+      summary: mapSummary(data.summary),
+    };
+  },
+
+  async getAts(id: string): Promise<AtsIntelligence> {
+    const data = await apiClient.get<AtsIntelligenceApi>(`/resumes/${id}/ats`);
+    return mapAts(data);
+  },
+
+  async getActiveAts(): Promise<AtsIntelligence> {
+    const data = await apiClient.get<AtsIntelligenceApi>("/resumes/active/ats");
+    return mapAts(data);
   },
 
   async activate(id: string): Promise<Resume> {

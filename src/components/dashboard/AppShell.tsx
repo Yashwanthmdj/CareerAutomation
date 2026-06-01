@@ -211,6 +211,7 @@ export function StatCard({
   hint,
   icon: Icon,
   accent = "indigo",
+  valueClassName,
 }: {
   label: string;
   value: string;
@@ -218,6 +219,7 @@ export function StatCard({
   hint?: string;
   icon: any;
   accent?: "indigo" | "cyan" | "violet" | "emerald";
+  valueClassName?: string;
 }) {
   const accents: Record<string, string> = {
     indigo: "from-indigo-500/30 to-indigo-500/0 text-indigo-300",
@@ -236,7 +238,7 @@ export function StatCard({
         <Icon className={`h-4 w-4 ${accents[accent].split(" ").pop()}`} />
       </div>
       <div className="mt-4 flex items-end justify-between gap-2">
-        <div className="font-display text-3xl font-semibold text-white">{value}</div>
+        <div className={`font-display text-3xl font-semibold ${valueClassName ?? "text-white"}`}>{value}</div>
         {delta && <div className="text-[11px] font-medium text-emerald-300">{delta}</div>}
         {hint && !delta && <div className="text-[11px] text-white/45">{hint}</div>}
       </div>

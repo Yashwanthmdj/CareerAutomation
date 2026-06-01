@@ -29,10 +29,13 @@ from .analysis_schemas import (
     ExtractedSkillOut,
     ResumeAnalysisOut,
 )
+from .ats_schemas import AtsIntelligenceOut
+from .ats_service import compute_ats_for_resume
 from .resume_analysis_service import get_analysis_counts, run_resume_analysis
 from .resume_schemas import (
     AnalysisSummaryBrief,
     ResumeActivateResponse,
+    ResumeAnalyzeResponse,
     ResumeActiveOut,
     ResumeDeleteResponse,
     ResumeListItemOut,
@@ -194,6 +197,17 @@ def get_active(current_user: User = Depends(get_current_user), db: Session = Dep
     return ResumeActiveOut(resume=_resume_out(active) if active else None)
 
 
+@router.get("/active/ats", response_model=AtsIntelligenceOut)
+def get_active_ats(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    active = get_active_resume(db, current_user.id)
+    if not active:
+        return AtsIntelligenceOut(
+            analysis_ready=False,
+            recommendations=["Upload and activate a resume to see ATS scoring."],
+        )
+    return compute_ats_for_resume(db, current_user, active.id)
+
+
 @router.get("/{resume_id}", response_model=ResumeOut)
 def get_resume(
     resume_id: str,
@@ -216,6 +230,57 @@ def get_resume_analysis(
     if not resume:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
     return _build_analysis_response(db, resume)
+
+
+@router.get("/{resume_id}/ats", response_model=AtsIntelligenceOut)
+def get_resume_ats(
+    resume_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    resume = get_user_resume(db, current_user.id, resume_id)
+    if not resume:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
+    return compute_ats_for_resume(db, current_user, resume_id)
+
+
+@router.post("/{resume_id}/analyze", response_model=ResumeAnalyzeResponse)
+def reanalyze_resume(
+    resume_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Re-run rule-based parsing on an existing stored PDF (backfill / refresh)."""
+    resume = get_user_resume(db, current_user.id, resume_id)
+    if not resume:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
+
+    if not storage.is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Resume storage is not configured.",
+        )
+
+    try:
+        content = storage.download(resume.supabase_object_key)
+    except SupabaseStorageError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Failed to download resume for analysis: {exc}",
+        ) from exc
+
+    analysis_status = run_resume_analysis(db, current_user.id, resume_id, content)
+    counts = get_analysis_counts(db, resume_id)
+    message = (
+        "Resume parsed successfully."
+        if analysis_status == "completed"
+        else "Resume analysis failed. Check parser logs or re-upload the PDF."
+    )
+    return ResumeAnalyzeResponse(
+        analysis_status=analysis_status,
+        summary=AnalysisSummaryBrief(**counts),
+        message=message,
+    )
 
 
 @router.get("/{resume_id}/download")

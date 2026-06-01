@@ -59,6 +59,12 @@ class ResumeDeleteResponse(BaseModel):
     message: str = "Resume deleted successfully"
 
 
+class ResumeAnalyzeResponse(BaseModel):
+    analysis_status: str
+    summary: AnalysisSummaryBrief
+    message: str = "Resume analysis complete"
+
+
 class ResumeSummaryOut(BaseModel):
     """Lightweight summary for profile/dashboard."""
 

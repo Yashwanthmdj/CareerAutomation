@@ -1,0 +1,37 @@
+Alex Rivera
+Frontend Developer
+alex.rivera@email.com | (555) 123-4567 | github.com/alexrivera
+
+SKILLS
+JavaScript, TypeScript, React, Angular, Vue, Node.js, HTML, CSS, Bootstrap, Tailwind, Next.js, Express, MongoDB, PostgreSQL, MySQL, AWS, Docker, Git, CI/CD, REST APIs
+
+WORK EXPERIENCE
+Senior Frontend Developer
+Tech Solutions Inc
+Jan 2021 – Present
+• Built responsive web applications with React and TypeScript serving 50k+ users
+• Deployed containerized apps on AWS using Docker and CI/CD pipelines
+• Integrated REST APIs and improved page load time by 35%
+
+Frontend Developer
+Web Agency LLC
+Jun 2018 – Dec 2020
+• Developed SPAs with Vue.js, JavaScript, and Bootstrap
+• Collaborated on PostgreSQL-backed Node.js services
+• Wrote unit tests with Jest and maintained Git workflows
+
+Junior Web Developer
+Startup Labs
+May 2016 – May 2018
+• Implemented HTML/CSS layouts and jQuery components
+• Assisted with MongoDB data models and Express endpoints
+
+EDUCATION
+Bachelor of Science in Computer Science
+State University
+2012 – 2016
+GPA: 3.7
+
+CERTIFICATIONS
+AWS Certified Cloud Practitioner
+Meta Front-End Developer Professional Certificate
