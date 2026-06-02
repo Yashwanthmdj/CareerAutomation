@@ -31,6 +31,7 @@ from .analysis_schemas import (
 )
 from .ats_schemas import AtsIntelligenceOut
 from .ats_service import compute_ats_for_resume
+from .resume_optimizer import ResumeOptimizationOut, compute_resume_optimization_for_resume
 from .resume_analysis_service import get_analysis_counts, run_resume_analysis
 from .resume_schemas import (
     AnalysisSummaryBrief,
@@ -242,6 +243,18 @@ def get_resume_ats(
     if not resume:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
     return compute_ats_for_resume(db, current_user, resume_id)
+
+
+@router.get("/{resume_id}/optimization", response_model=ResumeOptimizationOut)
+def get_resume_optimization(
+    resume_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    resume = get_user_resume(db, current_user.id, resume_id)
+    if not resume:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
+    return compute_resume_optimization_for_resume(db, current_user, resume_id)
 
 
 @router.post("/{resume_id}/analyze", response_model=ResumeAnalyzeResponse)

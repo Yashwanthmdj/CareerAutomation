@@ -42,12 +42,17 @@ class SupabaseStorage:
         if not self.is_configured():
             raise SupabaseStorageError("Supabase storage is not configured")
         url = self._object_url(object_key)
-        with httpx.Client(timeout=60.0) as client:
-            response = client.post(
-                url,
-                content=content,
-                headers={**self._headers(PDF_CONTENT_TYPE), "x-upsert": "true"},
-            )
+        try:
+            with httpx.Client(timeout=60.0) as client:
+                response = client.post(
+                    url,
+                    content=content,
+                    headers={**self._headers(PDF_CONTENT_TYPE), "x-upsert": "true"},
+                )
+        except httpx.HTTPError as exc:
+            raise SupabaseStorageError(
+                f"Storage connection failed for SUPABASE_URL='{self.base_url}': {exc}"
+            ) from exc
         if response.status_code not in (200, 201):
             raise SupabaseStorageError(
                 f"Upload failed ({response.status_code}): {response.text[:300]}"
@@ -57,8 +62,13 @@ class SupabaseStorage:
         if not self.is_configured():
             raise SupabaseStorageError("Supabase storage is not configured")
         url = self._object_url(object_key)
-        with httpx.Client(timeout=60.0) as client:
-            response = client.get(url, headers=self._headers())
+        try:
+            with httpx.Client(timeout=60.0) as client:
+                response = client.get(url, headers=self._headers())
+        except httpx.HTTPError as exc:
+            raise SupabaseStorageError(
+                f"Storage connection failed for SUPABASE_URL='{self.base_url}': {exc}"
+            ) from exc
         if response.status_code != 200:
             raise SupabaseStorageError(
                 f"Download failed ({response.status_code}): {response.text[:300]}"
@@ -69,8 +79,13 @@ class SupabaseStorage:
         if not self.is_configured():
             raise SupabaseStorageError("Supabase storage is not configured")
         url = self._object_url(object_key)
-        with httpx.Client(timeout=60.0) as client:
-            response = client.delete(url, headers=self._headers())
+        try:
+            with httpx.Client(timeout=60.0) as client:
+                response = client.delete(url, headers=self._headers())
+        except httpx.HTTPError as exc:
+            raise SupabaseStorageError(
+                f"Storage connection failed for SUPABASE_URL='{self.base_url}': {exc}"
+            ) from exc
         if response.status_code not in (200, 204):
             raise SupabaseStorageError(
                 f"Delete failed ({response.status_code}): {response.text[:300]}"

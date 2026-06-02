@@ -14,6 +14,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { AtsIntelligencePanel } from "@/components/resume/AtsIntelligencePanel";
+import { ResumeOptimizationPanel } from "@/components/resume/ResumeOptimizationPanel";
 import { useRef, useState } from "react";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { AnalysisSummaryCards } from "@/components/resume/AnalysisSummaryCards";
@@ -199,6 +200,19 @@ function ResumeManager() {
             </span>
           </div>
           <AtsIntelligencePanel resumeId={activeResume.id} />
+        </div>
+      )}
+
+      {activeResume && (
+        <div className="glass rounded-2xl p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-amber-300" />
+            <span className="font-display text-[15px] font-semibold text-white">Resume Optimization Engine</span>
+            <span className="rounded-full bg-amber-400/10 px-2 py-0.5 text-[10px] text-amber-200 ring-1 ring-amber-400/20">
+              Rule-based
+            </span>
+          </div>
+          <ResumeOptimizationPanel resumeId={activeResume.id} />
         </div>
       )}
 

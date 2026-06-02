@@ -7,6 +7,7 @@ import type {
   ScoreBreakdownItem,
   SkillNormalizationItem,
 } from "@/types/ats";
+import type { OptimizationItem, ResumeOptimization } from "@/types/resumeOptimization";
 
 type AnalysisSummaryApi = {
   skills_count: number;
@@ -88,6 +89,21 @@ type ResumeAnalysisApi = {
   summary: AnalysisSummaryApi;
   analyzed_at: string | null;
   error_message: string | null;
+};
+
+type ResumeOptimizationApi = {
+  health_score: number;
+  estimated_ats_gain: number;
+  optimization_items: {
+    priority: "High" | "Medium" | "Low";
+    title: string;
+    recommendation: string;
+    rationale: string;
+    estimated_gain: number;
+  }[];
+  section_scores: Record<string, number>;
+  keyword_gaps: string[];
+  impact_summary: string;
 };
 
 function mapSummary(data: AnalysisSummaryApi) {
@@ -195,6 +211,25 @@ function mapAnalysis(data: ResumeAnalysisApi): ResumeAnalysis {
   };
 }
 
+function mapOptimization(data: ResumeOptimizationApi): ResumeOptimization {
+  return {
+    healthScore: data.health_score,
+    estimatedAtsGain: data.estimated_ats_gain,
+    optimizationItems: (data.optimization_items ?? []).map(
+      (item): OptimizationItem => ({
+        priority: item.priority,
+        title: item.title,
+        recommendation: item.recommendation,
+        rationale: item.rationale,
+        estimatedGain: item.estimated_gain,
+      }),
+    ),
+    sectionScores: data.section_scores ?? {},
+    keywordGaps: data.keyword_gaps ?? [],
+    impactSummary: data.impact_summary ?? "",
+  };
+}
+
 function buildSummary(resumes: Resume[]): ResumeSummary {
   const active = resumes.find((r) => r.isActive) ?? null;
   return {
@@ -252,6 +287,11 @@ export const resumeService = {
   async getAts(id: string): Promise<AtsIntelligence> {
     const data = await apiClient.get<AtsIntelligenceApi>(`/resumes/${id}/ats`);
     return mapAts(data);
+  },
+
+  async getOptimization(id: string): Promise<ResumeOptimization> {
+    const data = await apiClient.get<ResumeOptimizationApi>(`/resumes/${id}/optimization`);
+    return mapOptimization(data);
   },
 
   async getActiveAts(): Promise<AtsIntelligence> {
