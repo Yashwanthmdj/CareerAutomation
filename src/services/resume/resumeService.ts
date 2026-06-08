@@ -7,7 +7,7 @@ import type {
   ScoreBreakdownItem,
   SkillNormalizationItem,
 } from "@/types/ats";
-import type { OptimizationItem, ResumeOptimization } from "@/types/resumeOptimization";
+import type { ResumeOptimization, SectionScores } from "@/types/resumeOptimization";
 
 type AnalysisSummaryApi = {
   skills_count: number;
@@ -93,17 +93,23 @@ type ResumeAnalysisApi = {
 
 type ResumeOptimizationApi = {
   health_score: number;
-  estimated_ats_gain: number;
-  optimization_items: {
-    priority: "High" | "Medium" | "Low";
-    title: string;
-    recommendation: string;
-    rationale: string;
-    estimated_gain: number;
-  }[];
-  section_scores: Record<string, number>;
-  keyword_gaps: string[];
-  impact_summary: string;
+  ats_readiness: number;
+  keyword_coverage: number;
+  recruiter_readability: number;
+  section_scores: {
+    summary: number;
+    skills: number;
+    projects: number;
+    experience: number;
+    education: number;
+  };
+  strengths: string[];
+  improvements: string[];
+  ats_simulator: {
+    current_score: number;
+    projected_score: number;
+    actions: { title: string; estimated_gain: number }[];
+  };
 };
 
 function mapSummary(data: AnalysisSummaryApi) {
@@ -212,21 +218,30 @@ function mapAnalysis(data: ResumeAnalysisApi): ResumeAnalysis {
 }
 
 function mapOptimization(data: ResumeOptimizationApi): ResumeOptimization {
+  const sections = data.section_scores ?? ({} as ResumeOptimizationApi["section_scores"]);
+  const sectionScores: SectionScores = {
+    summary: sections.summary ?? 0,
+    skills: sections.skills ?? 0,
+    projects: sections.projects ?? 0,
+    experience: sections.experience ?? 0,
+    education: sections.education ?? 0,
+  };
   return {
     healthScore: data.health_score,
-    estimatedAtsGain: data.estimated_ats_gain,
-    optimizationItems: (data.optimization_items ?? []).map(
-      (item): OptimizationItem => ({
-        priority: item.priority,
-        title: item.title,
-        recommendation: item.recommendation,
-        rationale: item.rationale,
-        estimatedGain: item.estimated_gain,
-      }),
-    ),
-    sectionScores: data.section_scores ?? {},
-    keywordGaps: data.keyword_gaps ?? [],
-    impactSummary: data.impact_summary ?? "",
+    atsReadiness: data.ats_readiness,
+    keywordCoverage: data.keyword_coverage,
+    recruiterReadability: data.recruiter_readability,
+    sectionScores,
+    strengths: data.strengths ?? [],
+    improvements: data.improvements ?? [],
+    atsSimulator: {
+      currentScore: data.ats_simulator?.current_score ?? 0,
+      projectedScore: data.ats_simulator?.projected_score ?? 0,
+      actions: (data.ats_simulator?.actions ?? []).map((action) => ({
+        title: action.title,
+        estimatedGain: action.estimated_gain,
+      })),
+    },
   };
 }
 

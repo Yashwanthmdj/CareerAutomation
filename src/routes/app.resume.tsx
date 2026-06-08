@@ -199,7 +199,10 @@ function ResumeManager() {
               Rule-based
             </span>
           </div>
-          <AtsIntelligencePanel resumeId={activeResume.id} />
+          <AtsIntelligencePanel
+            resumeId={activeResume.id}
+            analysisRevision={`${activeResume.analysisStatus ?? "pending"}-${activeResume.updatedAt}`}
+          />
         </div>
       )}
 
@@ -212,7 +215,12 @@ function ResumeManager() {
               Rule-based
             </span>
           </div>
-          <ResumeOptimizationPanel resumeId={activeResume.id} />
+          <ResumeOptimizationPanel
+            resumeId={activeResume.id}
+            analysisRevision={`${activeResume.analysisStatus ?? "pending"}-${activeResume.updatedAt}`}
+            isAnalyzing={isAnalyzing}
+            onReanalyze={() => analyze(activeResume.id)}
+          />
         </div>
       )}
 

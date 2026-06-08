@@ -36,7 +36,18 @@ class SupabaseStorage:
         return f"{self.base_url}/storage/v1/object/{self.bucket}/{object_key}"
 
     def is_configured(self) -> bool:
-        return bool(self.base_url and self.service_key and self.bucket)
+        return settings.supabase_is_configured()
+
+    @staticmethod
+    def is_retriable_delete_error(exc: SupabaseStorageError) -> bool:
+        message = str(exc).lower()
+        if "connection failed" in message:
+            return True
+        if "delete failed (404)" in message:
+            return True
+        if "not configured" in message:
+            return True
+        return False
 
     def upload_pdf(self, object_key: str, content: bytes) -> None:
         if not self.is_configured():

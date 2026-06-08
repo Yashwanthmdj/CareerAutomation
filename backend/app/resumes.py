@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
@@ -31,7 +32,8 @@ from .analysis_schemas import (
 )
 from .ats_schemas import AtsIntelligenceOut
 from .ats_service import compute_ats_for_resume
-from .resume_optimizer import ResumeOptimizationOut, compute_resume_optimization_for_resume
+from .optimization_schemas import ResumeOptimizationOut
+from .resume_optimization_service import compute_resume_optimization_for_resume
 from .resume_analysis_service import get_analysis_counts, run_resume_analysis
 from .resume_schemas import (
     AnalysisSummaryBrief,
@@ -56,6 +58,7 @@ from .supabase_storage import SupabaseStorage, SupabaseStorageError, build_objec
 
 router = APIRouter(prefix="/resumes", tags=["resumes"])
 storage = SupabaseStorage()
+logger = logging.getLogger(__name__)
 
 
 def _resume_out(resume: Resume) -> ResumeOut:
@@ -356,14 +359,27 @@ def delete_resume(
     was_active = resume.is_active
     object_key = resume.supabase_object_key
 
+    storage_warning: str | None = None
     if storage.is_configured():
         try:
             storage.delete(object_key)
         except SupabaseStorageError as exc:
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=f"Failed to delete resume file: {exc}",
-            ) from exc
+            if storage.is_retriable_delete_error(exc):
+                storage_warning = (
+                    "Resume removed from your account, but the stored PDF could not be deleted. "
+                    "Check SUPABASE_URL in backend/.env and retry storage cleanup later."
+                )
+                logger.warning(
+                    "Storage delete skipped for resume %s (%s): %s",
+                    resume_id,
+                    object_key,
+                    exc,
+                )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=f"Failed to delete resume file: {exc}",
+                ) from exc
 
     db.delete(resume)
     db.commit()
@@ -379,4 +395,6 @@ def delete_resume(
             activate_resume(db, next_resume)
             db.commit()
 
-    return ResumeDeleteResponse()
+    return ResumeDeleteResponse(
+        message=storage_warning or "Resume deleted successfully",
+    )
