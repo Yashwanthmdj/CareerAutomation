@@ -20,6 +20,9 @@ import { ChartPlaceholder } from "@/components/dashboard/ChartPlaceholder";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { useResume } from "@/hooks/useResume";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { opportunityService } from "@/services/opportunity/opportunityService";
+import type { Opportunity } from "@/types/opportunity";
+import { formatSourceType } from "@/types/opportunity";
 
 export const Route = createFileRoute("/app/")({
   head: () => ({ meta: [{ title: "Dashboard — Nexus" }] }),
@@ -27,11 +30,32 @@ export const Route = createFileRoute("/app/")({
 });
 
 function Dashboard() {
-  const { metrics, workspace } = useWorkspace();
+  const { metrics } = useWorkspace();
   const { activeResume } = useResume();
-  const hasOpportunities = workspace.opportunities.length > 0;
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [opportunitiesLoading, setOpportunitiesLoading] = useState(true);
+  const hasOpportunities = opportunities.length > 0;
   const [atsScore, setAtsScore] = useState<number | null>(null);
   const [atsGrade, setAtsGrade] = useState<string>("");
+
+  useEffect(() => {
+    let cancelled = false;
+    setOpportunitiesLoading(true);
+    opportunityService
+      .list()
+      .then((result) => {
+        if (!cancelled) setOpportunities(result.opportunities);
+      })
+      .catch(() => {
+        if (!cancelled) setOpportunities([]);
+      })
+      .finally(() => {
+        if (!cancelled) setOpportunitiesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!activeResume) {
@@ -150,15 +174,17 @@ function Dashboard() {
               Open <ArrowUpRight className="h-3 w-3" />
             </Link>
           </div>
-          {hasOpportunities ? (
+          {opportunitiesLoading ? (
+            <p className="mt-4 text-[12px] text-white/45">Loading opportunities…</p>
+          ) : hasOpportunities ? (
             <table className="mt-4 w-full text-sm">
               <tbody>
-                {workspace.opportunities.slice(0, 4).map((o) => (
+                {opportunities.slice(0, 4).map((o) => (
                   <tr key={o.id} className="border-b border-white/5 last:border-0">
                     <td className="py-2.5 text-white/90">{o.company}</td>
-                    <td className="py-2.5 text-white/60">{o.role}</td>
+                    <td className="py-2.5 text-white/60">{o.title}</td>
                     <td className="py-2.5 text-right text-cyan-300 font-medium">
-                      {o.matchScore != null ? `${o.matchScore}%` : "—"}
+                      {formatSourceType(o.sourceType)}
                     </td>
                   </tr>
                 ))}
@@ -168,9 +194,9 @@ function Dashboard() {
             <EmptyState
               icon={Briefcase}
               title="No opportunities yet"
-              description="Connect WhatsApp and LinkedIn to begin opportunity discovery."
-              actionLabel="Connect platforms"
-              actionTo="/app/integrations"
+              description="Add opportunities manually or ingest from connected platforms in future phases."
+              actionLabel="Open opportunities"
+              actionTo="/app/opportunities"
               className="mt-4 py-8"
             />
           )}

@@ -32,8 +32,10 @@ from .analysis_schemas import (
 )
 from .ats_schemas import AtsIntelligenceOut
 from .ats_service import compute_ats_for_resume
+from .ai.schemas import OptimizationRequest, OptimizationResponse
 from .optimization_schemas import ResumeOptimizationOut
 from .resume_optimization_service import compute_resume_optimization_for_resume
+from .services.resume_optimization_service import optimize_resume_with_ai
 from .resume_analysis_service import get_analysis_counts, run_resume_analysis
 from .resume_schemas import (
     AnalysisSummaryBrief,
@@ -260,6 +262,22 @@ def get_resume_optimization(
     return compute_resume_optimization_for_resume(db, current_user, resume_id)
 
 
+@router.post("/{resume_id}/optimize", response_model=OptimizationResponse)
+def optimize_resume_ai(
+    resume_id: str,
+    body: Optional[OptimizationRequest] = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Phase 3.5 AI resume optimization (mock provider by default)."""
+    return optimize_resume_with_ai(
+        db=db,
+        user=current_user,
+        resume_id=resume_id,
+        request=body or OptimizationRequest(),
+    )
+
+
 @router.post("/{resume_id}/analyze", response_model=ResumeAnalyzeResponse)
 def reanalyze_resume(
     resume_id: str,
@@ -359,7 +377,7 @@ def delete_resume(
     was_active = resume.is_active
     object_key = resume.supabase_object_key
 
-    storage_warning: str | None = None
+    storage_warning: Optional[str] = None
     if storage.is_configured():
         try:
             storage.delete(object_key)
