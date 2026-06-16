@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     supabase_service_role_key: str = ""
     supabase_bucket_name: str = "resumes"
 
+    scout_interval_minutes: int = 15
+    scout_scheduler_enabled: bool = True
+
     @field_validator(
         "supabase_url",
         "next_public_supabase_url",

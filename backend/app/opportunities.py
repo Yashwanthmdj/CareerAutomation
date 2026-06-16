@@ -21,6 +21,8 @@ from .opportunity_schemas import (
     SavedOpportunityListOut,
     SavedOpportunityOut,
 )
+from .opportunity_matching_schemas import OpportunityMatchOut, OpportunityRecommendationListOut
+from .opportunity_matching_service import OpportunityMatchingService
 from .opportunity_service import OpportunityService
 
 router = APIRouter(prefix="/opportunities", tags=["opportunities"])
@@ -32,6 +34,25 @@ def _service(db: Session) -> OpportunityService:
 
 def _ingestion(db: Session) -> OpportunityIngestionService:
     return OpportunityIngestionService(db)
+
+
+def _matching(db: Session) -> OpportunityMatchingService:
+    return OpportunityMatchingService(db)
+
+
+@router.get("/recommended/me", response_model=OpportunityRecommendationListOut)
+def list_recommended_opportunities(
+    min_score: int = Query(default=0, ge=0, le=100),
+    limit: Optional[int] = Query(default=None, ge=1, le=100),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Personalized opportunity recommendations sorted by highest match score."""
+    return _matching(db).get_opportunity_recommendations(
+        current_user,
+        min_score=min_score,
+        limit=limit,
+    )
 
 
 @router.get("/saved/me", response_model=SavedOpportunityListOut)
@@ -106,6 +127,16 @@ def create_opportunity(
     service = _service(db)
     opportunity = service.create_opportunity(payload)
     return service.get_opportunity(opportunity.id, current_user.id)
+
+
+@router.get("/{opportunity_id}/match", response_model=OpportunityMatchOut)
+def get_opportunity_match(
+    opportunity_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Match analysis for one opportunity against the user's active resume."""
+    return _matching(db).get_match_for_opportunity(current_user, opportunity_id)
 
 
 @router.get("/{opportunity_id}", response_model=OpportunityOut)

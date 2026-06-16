@@ -1,5 +1,9 @@
 import { apiClient } from "@/services/api/client";
 import type { Opportunity, OpportunityCreateInput, OpportunityType, SourceType } from "@/types/opportunity";
+import type {
+  OpportunityMatch,
+  OpportunityRecommendationList,
+} from "@/types/opportunityMatch";
 
 type OpportunityApi = {
   id: string;
@@ -59,6 +63,30 @@ export type OpportunityIngestResult = {
   opportunity: Opportunity;
   isDuplicate: boolean;
   message: string;
+};
+
+type OpportunityMatchApi = {
+  opportunity_id: string;
+  match_score: number;
+  match_level: OpportunityMatch["matchLevel"];
+  matched_skills: string[];
+  missing_skills: string[];
+  analysis_ready: boolean;
+  message?: string | null;
+};
+
+type OpportunityRecommendationListApi = {
+  recommendations: Array<{
+    opportunity: OpportunityApi;
+    match_score: number;
+    match_level: OpportunityMatch["matchLevel"];
+    matched_skills: string[];
+    missing_skills: string[];
+  }>;
+  total: number;
+  analysis_ready: boolean;
+  resume_id?: string | null;
+  message?: string | null;
 };
 
 export const opportunityService = {
@@ -139,5 +167,41 @@ export const opportunityService = {
 
   async unsave(id: string): Promise<void> {
     await apiClient.delete(`/opportunities/${id}/save`);
+  },
+
+  async getRecommended(params: {
+    minScore?: number;
+    limit?: number;
+  } = {}): Promise<OpportunityRecommendationList> {
+    const data = await apiClient.get<OpportunityRecommendationListApi>("/opportunities/recommended/me", {
+      min_score: params.minScore,
+      limit: params.limit,
+    });
+    return {
+      recommendations: (data.recommendations ?? []).map((row) => ({
+        opportunity: mapOpportunity(row.opportunity),
+        matchScore: row.match_score,
+        matchLevel: row.match_level,
+        matchedSkills: row.matched_skills ?? [],
+        missingSkills: row.missing_skills ?? [],
+      })),
+      total: data.total ?? 0,
+      analysisReady: data.analysis_ready ?? false,
+      resumeId: data.resume_id,
+      message: data.message,
+    };
+  },
+
+  async getMatch(id: string): Promise<OpportunityMatch> {
+    const data = await apiClient.get<OpportunityMatchApi>(`/opportunities/${id}/match`);
+    return {
+      opportunityId: data.opportunity_id,
+      matchScore: data.match_score,
+      matchLevel: data.match_level,
+      matchedSkills: data.matched_skills ?? [],
+      missingSkills: data.missing_skills ?? [],
+      analysisReady: data.analysis_ready ?? false,
+      message: data.message,
+    };
   },
 };

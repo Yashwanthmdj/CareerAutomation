@@ -12,6 +12,8 @@ pip install -r requirements.txt
 cp .env.example .env
 # Edit DATABASE_URL and JWT_SECRET_KEY
 uvicorn app.main:app --reload --port 8000
+#or
+cd backend && source .venv/bin/activate && python -m pytest tests/test_opportunity_matching_service.py -v
 ```
 
 Tables are created on startup via SQLAlchemy `create_all`.

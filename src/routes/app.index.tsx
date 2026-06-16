@@ -6,10 +6,9 @@ import {
   FileText,
   Bot,
   ArrowUpRight,
-  Briefcase,
   Target,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { StatCard } from "@/components/dashboard/AppShell";
 import { AtsIntelligencePanel } from "@/components/resume/AtsIntelligencePanel";
 import { resumeService } from "@/services/resume/resumeService";
@@ -17,12 +16,16 @@ import { atsScoreColor } from "@/types/ats";
 import { WelcomeHero } from "@/components/dashboard/WelcomeHero";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { ChartPlaceholder } from "@/components/dashboard/ChartPlaceholder";
-import { EmptyState } from "@/components/dashboard/EmptyState";
 import { useResume } from "@/hooks/useResume";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { OpportunityDiscoveryCarousel } from "@/components/dashboard/OpportunityDiscoveryCarousel";
+import { OpportunityDiscoveryMetrics } from "@/components/dashboard/OpportunityDiscoveryMetrics";
+import { ConnectedSourcesPanel } from "@/components/dashboard/ConnectedSourcesPanel";
+import { ApplicationPipelinePanel } from "@/components/dashboard/ApplicationPipelinePanel";
+import { AutomationRegistryPanel } from "@/components/dashboard/AutomationRegistryPanel";
+import { RecommendedOpportunitiesCarousel } from "@/components/dashboard/RecommendedOpportunitiesCarousel";
 import { opportunityService } from "@/services/opportunity/opportunityService";
-import type { Opportunity } from "@/types/opportunity";
-import { formatSourceType } from "@/types/opportunity";
+import type { OpportunityRecommendation } from "@/types/opportunityMatch";
 
 export const Route = createFileRoute("/app/")({
   head: () => ({ meta: [{ title: "Dashboard — Nexus" }] }),
@@ -32,30 +35,29 @@ export const Route = createFileRoute("/app/")({
 function Dashboard() {
   const { metrics } = useWorkspace();
   const { activeResume } = useResume();
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [recommendations, setRecommendations] = useState<OpportunityRecommendation[]>([]);
   const [opportunitiesLoading, setOpportunitiesLoading] = useState(true);
-  const hasOpportunities = opportunities.length > 0;
+  const [recommendationsMessage, setRecommendationsMessage] = useState<string | null>(null);
   const [atsScore, setAtsScore] = useState<number | null>(null);
   const [atsGrade, setAtsGrade] = useState<string>("");
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadRecommendations = useCallback(async () => {
     setOpportunitiesLoading(true);
-    opportunityService
-      .list()
-      .then((result) => {
-        if (!cancelled) setOpportunities(result.opportunities);
-      })
-      .catch(() => {
-        if (!cancelled) setOpportunities([]);
-      })
-      .finally(() => {
-        if (!cancelled) setOpportunitiesLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+    try {
+      const result = await opportunityService.getRecommended({ limit: 5 });
+      setRecommendations(result.recommendations);
+      setRecommendationsMessage(result.message ?? null);
+    } catch {
+      setRecommendations([]);
+      setRecommendationsMessage(null);
+    } finally {
+      setOpportunitiesLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadRecommendations();
+  }, [loadRecommendations]);
 
   useEffect(() => {
     if (!activeResume) {
@@ -115,6 +117,10 @@ function Dashboard() {
         />
       </div>
 
+      <div className="mt-6">
+        <ApplicationPipelinePanel />
+      </div>
+
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <motion.div whileHover={{ y: -3 }} className="glass relative overflow-hidden rounded-2xl p-6 lg:col-span-2">
           <div className="flex items-center justify-between">
@@ -163,75 +169,28 @@ function Dashboard() {
         </motion.div>
       )}
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        <div className="glass rounded-2xl p-6">
-          <div className="flex items-center justify-between">
-            <div className="font-display text-[15px] font-semibold text-white">Opportunities</div>
-            <Link
-              to="/app/opportunities"
-              className="inline-flex items-center gap-1 text-[12px] text-cyan-300"
-            >
-              Open <ArrowUpRight className="h-3 w-3" />
-            </Link>
-          </div>
-          {opportunitiesLoading ? (
-            <p className="mt-4 text-[12px] text-white/45">Loading opportunities…</p>
-          ) : hasOpportunities ? (
-            <table className="mt-4 w-full text-sm">
-              <tbody>
-                {opportunities.slice(0, 4).map((o) => (
-                  <tr key={o.id} className="border-b border-white/5 last:border-0">
-                    <td className="py-2.5 text-white/90">{o.company}</td>
-                    <td className="py-2.5 text-white/60">{o.title}</td>
-                    <td className="py-2.5 text-right text-cyan-300 font-medium">
-                      {formatSourceType(o.sourceType)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <EmptyState
-              icon={Briefcase}
-              title="No opportunities yet"
-              description="Add opportunities manually or ingest from connected platforms in future phases."
-              actionLabel="Open opportunities"
-              actionTo="/app/opportunities"
-              className="mt-4 py-8"
-            />
-          )}
-        </div>
+      <div className="mt-6">
+        <OpportunityDiscoveryMetrics />
+      </div>
 
-        <div className="glass rounded-2xl p-6">
-          <div className="font-display text-[15px] font-semibold text-white">Automation agents</div>
-          <p className="mt-1 text-[12px] text-white/50">Phase 1 — configuration status only</p>
-          <div className="mt-5 space-y-4">
-            {[
-              "Apply Agent",
-              "Email Agent",
-              "Form Agent",
-              "Opportunity Scout",
-            ].map((name) => (
-              <div key={name}>
-                <div className="flex items-center justify-between text-[12.5px]">
-                  <span className="text-white/70">{name}</span>
-                  <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] text-white/45">
-                    Not configured
-                  </span>
-                </div>
-                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/5">
-                  <div className="h-full w-0 rounded-full bg-gradient-to-r from-indigo-500/40 to-cyan-400/40" />
-                </div>
-              </div>
-            ))}
-          </div>
-          <Link
-            to="/app/automation"
-            className="mt-5 inline-flex text-[12px] text-cyan-300 hover:text-cyan-200"
-          >
-            Open automation registry →
-          </Link>
-        </div>
+      <div className="mt-6">
+        <ConnectedSourcesPanel />
+      </div>
+
+      <div className="mt-6">
+        <OpportunityDiscoveryCarousel onRunComplete={() => void loadRecommendations()} />
+      </div>
+
+      <div className="mt-6">
+        <RecommendedOpportunitiesCarousel
+          recommendations={recommendations}
+          loading={opportunitiesLoading}
+          message={recommendationsMessage}
+        />
+      </div>
+
+      <div className="mt-6">
+        <AutomationRegistryPanel />
       </div>
     </>
   );
